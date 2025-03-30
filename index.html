@@ -1,105 +1,177 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>⚡ PHOTON-BASED HOLOGRAM ⚡</title>
+    <title>⚡ SATURN PHOTON VOYAGE ⚡</title>
     <style>
         body { 
             margin: 0; 
             overflow: hidden; 
             background: #000;
-            font-family: Arial, sans-serif;
+            font-family: 'Arial', sans-serif;
+            touch-action: manipulation;
         }
         #ui {
             position: absolute;
             top: 20px;
             left: 20px;
-            color: #00ffff;
-            text-shadow: 0 0 15px #00ffff;
+            color: #00f7ff;
+            text-shadow: 0 0 10px #0066ff;
             z-index: 100;
+            pointer-events: none;
         }
-        #muteButton {
+        #controls {
             position: absolute;
             bottom: 20px;
             right: 20px;
-            padding: 10px 20px;
-            background: rgba(0, 255, 255, 0.2);
-            border: 1px solid #00ffff;
-            color: #00ffff;
-            text-shadow: 0 0 5px #00ffff;
-            cursor: pointer;
-            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
             z-index: 100;
-            transition: all 0.3s;
         }
-        #muteButton:hover {
-            background: rgba(0, 255, 255, 0.4);
-            text-shadow: 0 0 10px #00ffff;
+        .control-btn {
+            padding: 12px 24px;
+            background: rgba(0, 120, 255, 0.2);
+            border: 1px solid #00f7ff;
+            border-radius: 4px;
+            color: #00f7ff;
+            text-shadow: 0 0 5px #0066ff;
+            cursor: pointer;
+            font-family: 'Arial', sans-serif;
+            font-weight: bold;
+            transition: all 0.3s;
+            backdrop-filter: blur(5px);
+        }
+        .control-btn:hover {
+            background: rgba(0, 180, 255, 0.4);
+            text-shadow: 0 0 15px #00a2ff;
         }
         canvas { 
             display: block; 
             width: 100vw; 
             height: 100vh;
         }
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #00f7ff;
+            font-size: 24px;
+            z-index: 1000;
+        }
     </style>
 </head>
 <body>
+    <div id="loading">Initializing Quantum Photon Drive...</div>
+    
     <div id="ui">
-        <h1>PHOTONIC HOLOCALL</h1>
-        <p>Interactive photon-based hologram with techno vibes</p>
-        <p>Powered by HOLOHARMONIQ LTD, London</p>
+        <h1>SATURN PHOTON VOYAGE</h1>
+        <p>Hyper-speed journey through cosmic rings</p>
+        <p>Powered by HOLOHARMONIQ LTD - Photon Tech v3.0</p>
     </div>
-    <button id="muteButton">Mute</button>
+    
+    <div id="controls">
+        <button id="flyButton" class="control-btn">Activate Light Flight</button>
+        <button id="muteButton" class="control-btn">Mute Audio</button>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
     <script>
-        // 1. System initialization
+        // 0. Loading Screen
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('loading').style.opacity = 0;
+                setTimeout(() => {
+                    document.getElementById('loading').style.display = 'none';
+                }, 500);
+            }, 2000);
+        });
+
+        // 1. Rendering Setup
         const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.z = 5;
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+        camera.position.z = 15;
 
         const renderer = new THREE.WebGLRenderer({
             antialias: true,
             powerPreference: "high-performance",
-            alpha: true
+            alpha: true,
+            logarithmicDepthBuffer: true
         });
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
 
-        // 2. Photon particles
-        const photonCount = 50000;
-        const photons = new THREE.BufferGeometry();
-        const posArray = new Float32Array(photonCount * 3);
-        const colorArray = new Float32Array(photonCount * 3);
-        const basePosArray = new Float32Array(photonCount * 3);
+        // 2. Saturn Core - Tengelydőlés beállítva
+        const saturnParticles = 50000;
+        const saturnGeo = new THREE.BufferGeometry();
+        const saturnPos = new Float32Array(saturnParticles * 3);
+        const saturnCol = new Float32Array(saturnParticles * 3);
         
-        for (let i = 0; i < photonCount; i++) {
-            const radius = 2 * Math.cbrt(Math.random());
+        for(let i = 0; i < saturnParticles; i++) {
+            const radius = 3 * Math.pow(Math.random(), 0.33);
             const theta = Math.random() * Math.PI * 2;
             const phi = Math.acos(2 * Math.random() - 1);
             
-            const x = radius * Math.sin(phi) * Math.cos(theta);
-            const y = radius * Math.sin(phi) * Math.sin(theta);
-            const z = radius * Math.cos(phi);
+            saturnPos[i*3] = radius * Math.sin(phi) * Math.cos(theta);
+            saturnPos[i*3+1] = radius * Math.sin(phi) * Math.sin(theta);
+            saturnPos[i*3+2] = radius * Math.cos(phi);
             
-            posArray[i * 3] = x;
-            posArray[i * 3 + 1] = y;
-            posArray[i * 3 + 2] = z;
-            
-            basePosArray[i * 3] = x;
-            basePosArray[i * 3 + 1] = y;
-            basePosArray[i * 3 + 2] = z;
-            
-            colorArray[i * 3] = 0.2 + 0.8 * Math.abs(x / 2);
-            colorArray[i * 3 + 1] = 0.5 + 0.5 * Math.abs(y / 2);
-            colorArray[i * 3 + 2] = 1.0;
+            const band = Math.floor(Math.abs(theta / Math.PI * 10)) % 3;
+            saturnCol[i*3] = 0.9 + (0.1 * band * Math.random());
+            saturnCol[i*3+1] = 0.7 + (0.2 * (1-band) * Math.random());
+            saturnCol[i*3+2] = 0.5 + (0.1 * band * Math.random());
         }
         
-        photons.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-        photons.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
+        saturnGeo.setAttribute('position', new THREE.BufferAttribute(saturnPos, 3));
+        saturnGeo.setAttribute('color', new THREE.BufferAttribute(saturnCol, 3));
         
-        const photonMaterial = new THREE.PointsMaterial({
-            size: 0.015,
+        const saturnMat = new THREE.PointsMaterial({
+            size: 0.05,
+            sizeAttenuation: true,
+            vertexColors: true,
+            transparent: true,
+            opacity: 0.9,
+            blending: THREE.AdditiveBlending
+        });
+        
+        const saturn = new THREE.Points(saturnGeo, saturnMat);
+        saturn.rotation.x = 0.466; // Szaturnusz tengelydőlése: 26,73 fok (~0,466 radian)
+        scene.add(saturn);
+
+        // 3. Rings - Dőlés szinkronizálva
+        const ringParticles = 100000;
+        const ringGeo = new THREE.BufferGeometry();
+        const ringPos = new Float32Array(ringParticles * 3);
+        const ringCol = new Float32Array(ringParticles * 3);
+        
+        for(let i = 0; i < ringParticles; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const radius = 4 + Math.random() * 5;
+            const thickness = (Math.random() - 0.5) * 0.1;
+            
+            if(radius > 5.5 && radius < 7 && Math.random() > 0.1) continue;
+            
+            ringPos[i*3] = radius * Math.cos(angle);
+            ringPos[i*3+1] = thickness;
+            ringPos[i*3+2] = radius * Math.sin(angle);
+            
+            ringCol[i*3] = 0.8 + Math.random() * 0.2;
+            ringCol[i*3+1] = 0.8 + Math.random() * 0.2;
+            ringCol[i*3+2] = 0.9 + Math.random() * 0.1;
+        }
+        
+        ringGeo.setAttribute('position', new THREE.BufferAttribute(ringPos, 3));
+        ringGeo.setAttribute('color', new THREE.BufferAttribute(ringCol, 3));
+        
+        const ringMat = new THREE.PointsMaterial({
+            size: 0.03,
             sizeAttenuation: true,
             vertexColors: true,
             transparent: true,
@@ -107,90 +179,96 @@
             blending: THREE.AdditiveBlending
         });
         
-        const photonSystem = new THREE.Points(photons, photonMaterial);
-        scene.add(photonSystem);
+        const rings = new THREE.Points(ringGeo, ringMat);
+        rings.rotation.x = Math.PI / 2 + 0.466; // Gyűrűk dőlése a Szaturnusz tengelyével szinkronban
+        scene.add(rings);
 
-        // 3. Interactivity
-        let mouseX = 0, mouseY = 0;
-        let isDragging = false;
+        // 4. Flight Controls
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.maxPolarAngle = Math.PI;
+        controls.minPolarAngle = 0;
+        controls.maxDistance = 30;
+        controls.minDistance = 3;
+
+        let isFlying = false;
+        let flyProgress = 0;
+        const flyPath = [
+            {x: 0, y: 0, z: 15},    // Start view
+            {x: -10, y: 3, z: 5},   // Approach
+            {x: -5, y: 1, z: -2},   // Ring entry
+            {x: 0, y: 0.5, z: -4},  // Inside rings
+            {x: 5, y: -1, z: -2},   // Ring exit
+            {x: 10, y: -3, z: 5}    // Departure
+        ];
         
-        document.addEventListener('mousedown', () => isDragging = true);
-        document.addEventListener('mouseup', () => isDragging = false);
-        document.addEventListener('mousemove', (event) => {
-            if (isDragging) {
-                mouseX = (event.clientX / window.innerWidth) * 2 - 1;
-                mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
-            }
+        document.getElementById('flyButton').addEventListener('click', () => {
+            isFlying = !isFlying;
+            flyProgress = 0;
+            document.getElementById('flyButton').textContent = 
+                isFlying ? 'Exit Light Flight' : 'Activate Light Flight';
         });
 
-        document.addEventListener('touchstart', () => isDragging = true);
-        document.addEventListener('touchend', () => isDragging = false);
-        document.addEventListener('touchmove', (event) => {
-            if (isDragging && event.touches.length > 0) {
-                mouseX = (event.touches[0].clientX / window.innerWidth) * 2 - 1;
-                mouseY = -(event.touches[0].clientY / window.innerHeight) * 2 + 1;
-            }
-        });
-
-        // 4. Interference pattern
-        let time = 0;
-        const interferencePattern = () => {
-            const positions = photonSystem.geometry.attributes.position.array;
-            time += 0.01;
-            
-            for (let i = 0; i < photonCount * 3; i += 3) {
-                const x = basePosArray[i];
-                const y = basePosArray[i + 1];
-                const z = basePosArray[i + 2];
-                
-                const dist = Math.sqrt(x * x + y * y + z * z);
-                const wave = Math.sin(dist * 5 + time) * 0.05;
-                
-                const mouseInfluence = Math.exp(-dist * 2) * 0.2;
-                positions[i] = x + wave * (x / dist || 0) + mouseX * mouseInfluence;
-                positions[i + 1] = y + wave * (y / dist || 0) + mouseY * mouseInfluence;
-                positions[i + 2] = z + wave * (z / dist || 0);
-            }
-            photonSystem.geometry.attributes.position.needsUpdate = true;
-        };
-
-        // 5. Techno music and mute button
+        // 5. Cosmic Audio
         const audio = new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3');
         audio.loop = true;
-        audio.volume = 0.5;
-        document.addEventListener('click', () => audio.play(), { once: true });
+        audio.volume = 0.4;
+        document.addEventListener('click', () => {
+            audio.play().catch(err => console.error("Audio error:", err));
+        }, { once: true });
 
         const muteButton = document.getElementById('muteButton');
         let isMuted = false;
         muteButton.addEventListener('click', () => {
             isMuted = !isMuted;
             audio.muted = isMuted;
-            muteButton.textContent = isMuted ? 'Unmute' : 'Mute';
+            muteButton.textContent = isMuted ? 'Unmute Audio' : 'Mute Audio';
         });
 
-        // 6. Animation
-        function animate() {
+        // 6. Animation Loop
+        const clock = new THREE.Clock();
+        const animate = () => {
             requestAnimationFrame(animate);
-            interferencePattern();
             
-            if (isDragging) {
-                photonSystem.rotation.y += mouseX * 0.05;
-                photonSystem.rotation.x += mouseY * 0.05;
-                camera.position.z = Math.max(3, Math.min(7, camera.position.z - mouseY * 0.1));
-            } else {
-                photonSystem.rotation.y += 0.002;
+            const delta = clock.getDelta();
+            const time = clock.getElapsedTime();
+            
+            saturn.rotation.y += delta * 0.2;
+            rings.rotation.y += delta * 0.1;
+            
+            if(isFlying && flyProgress < 1) {
+                flyProgress += delta * 0.1;
+                const segment = flyProgress * (flyPath.length - 1);
+                const idx = Math.floor(segment);
+                const frac = segment - idx;
+                
+                if(idx < flyPath.length - 1) {
+                    camera.position.x = flyPath[idx].x + (flyPath[idx+1].x - flyPath[idx].x) * frac;
+                    camera.position.y = flyPath[idx].y + (flyPath[idx+1].y - flyPath[idx].y) * frac;
+                    camera.position.z = flyPath[idx].z + (flyPath[idx+1].z - flyPath[idx].z) * frac;
+                }
             }
             
+            controls.update();
             renderer.render(scene, camera);
-        }
+        };
         animate();
 
-        // 7. Responsiveness
+        // 7. Responsive Design
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
+
+        // Hibakeresés
+        window.onerror = (msg, url, lineNo, columnNo, error) => {
+            console.error(`Error: ${msg} @ ${url}:${lineNo}:${columnNo}`, error);
+            document.getElementById('loading').innerHTML = `<div>Error: ${msg}</div>`;
+            document.getElementById('loading').style.opacity = 1;
+            document.getElementById('loading').style.display = 'flex';
+        };
     </script>
 </body>
 </html>
