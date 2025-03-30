@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>⚡ PHOTON-BASED HOLOGRAM ⚡</title>
+    <style>
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            background: #000;
+            font-family: Arial, sans-serif;
+        }
+        #ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #00ffff;
+            text-shadow: 0 0 15px #00ffff;
+            z-index: 100;
+        }
+        #muteButton {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background: rgba(0, 255, 255, 0.2);
+            border: 1px solid #00ffff;
+            color: #00ffff;
+            text-shadow: 0 0 5px #00ffff;
+            cursor: pointer;
+            font-family: Arial, sans-serif;
+            z-index: 100;
+            transition: all 0.3s;
+        }
+        #muteButton:hover {
+            background: rgba(0, 255, 255, 0.4);
+            text-shadow: 0 0 10px #00ffff;
+        }
+        canvas { 
+            display: block; 
+            width: 100vw; 
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    <div id="ui">
+        <h1>PHOTONIC HOLOCALL</h1>
+        <p>Interactive photon-based hologram with techno vibes</p>
+        <p>Powered by HOLOHARMONIQ LTD, London</p>
+    </div>
+    <button id="muteButton">Mute</button>
+
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+    <script>
+        // 1. System initialization
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 5;
+
+        const renderer = new THREE.WebGLRenderer({
+            antialias: true,
+            powerPreference: "high-performance",
+            alpha: true
+        });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // 2. Photon particles
+        const photonCount = 50000;
+        const photons = new THREE.BufferGeometry();
+        const posArray = new Float32Array(photonCount * 3);
+        const colorArray = new Float32Array(photonCount * 3);
+        const basePosArray = new Float32Array(photonCount * 3);
+        
+        for (let i = 0; i < photonCount; i++) {
+            const radius = 2 * Math.cbrt(Math.random());
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.acos(2 * Math.random() - 1);
+            
+            const x = radius * Math.sin(phi) * Math.cos(theta);
+            const y = radius * Math.sin(phi) * Math.sin(theta);
+            const z = radius * Math.cos(phi);
+            
+            posArray[i * 3] = x;
+            posArray[i * 3 + 1] = y;
+            posArray[i * 3 + 2] = z;
+            
+            basePosArray[i * 3] = x;
+            basePosArray[i * 3 + 1] = y;
+            basePosArray[i * 3 + 2] = z;
+            
+            colorArray[i * 3] = 0.2 + 0.8 * Math.abs(x / 2);
+            colorArray[i * 3 + 1] = 0.5 + 0.5 * Math.abs(y / 2);
+            colorArray[i * 3 + 2] = 1.0;
+        }
+        
+        photons.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        photons.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
+        
+        const photonMaterial = new THREE.PointsMaterial({
+            size: 0.015,
+            sizeAttenuation: true,
+            vertexColors: true,
+            transparent: true,
+            opacity: 0.8,
+            blending: THREE.AdditiveBlending
+        });
+        
+        const photonSystem = new THREE.Points(photons, photonMaterial);
+        scene.add(photonSystem);
+
+        // 3. Interactivity
+        let mouseX = 0, mouseY = 0;
+        let isDragging = false;
+        
+        document.addEventListener('mousedown', () => isDragging = true);
+        document.addEventListener('mouseup', () => isDragging = false);
+        document.addEventListener('mousemove', (event) => {
+            if (isDragging) {
+                mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+                mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+            }
+        });
+
+        document.addEventListener('touchstart', () => isDragging = true);
+        document.addEventListener('touchend', () => isDragging = false);
+        document.addEventListener('touchmove', (event) => {
+            if (isDragging && event.touches.length > 0) {
+                mouseX = (event.touches[0].clientX / window.innerWidth) * 2 - 1;
+                mouseY = -(event.touches[0].clientY / window.innerHeight) * 2 + 1;
+            }
+        });
+
+        // 4. Interference pattern
+        let time = 0;
+        const interferencePattern = () => {
+            const positions = photonSystem.geometry.attributes.position.array;
+            time += 0.01;
+            
+            for (let i = 0; i < photonCount * 3; i += 3) {
+                const x = basePosArray[i];
+                const y = basePosArray[i + 1];
+                const z = basePosArray[i + 2];
+                
+                const dist = Math.sqrt(x * x + y * y + z * z);
+                const wave = Math.sin(dist * 5 + time) * 0.05;
+                
+                const mouseInfluence = Math.exp(-dist * 2) * 0.2;
+                positions[i] = x + wave * (x / dist || 0) + mouseX * mouseInfluence;
+                positions[i + 1] = y + wave * (y / dist || 0) + mouseY * mouseInfluence;
+                positions[i + 2] = z + wave * (z / dist || 0);
+            }
+            photonSystem.geometry.attributes.position.needsUpdate = true;
+        };
+
+        // 5. Techno music and mute button
+        const audio = new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3');
+        audio.loop = true;
+        audio.volume = 0.5;
+        document.addEventListener('click', () => audio.play(), { once: true });
+
+        const muteButton = document.getElementById('muteButton');
+        let isMuted = false;
+        muteButton.addEventListener('click', () => {
+            isMuted = !isMuted;
+            audio.muted = isMuted;
+            muteButton.textContent = isMuted ? 'Unmute' : 'Mute';
+        });
+
+        // 6. Animation
+        function animate() {
+            requestAnimationFrame(animate);
+            interferencePattern();
+            
+            if (isDragging) {
+                photonSystem.rotation.y += mouseX * 0.05;
+                photonSystem.rotation.x += mouseY * 0.05;
+                camera.position.z = Math.max(3, Math.min(7, camera.position.z - mouseY * 0.1));
+            } else {
+                photonSystem.rotation.y += 0.002;
+            }
+            
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // 7. Responsiveness
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
